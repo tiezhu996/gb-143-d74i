@@ -100,9 +100,33 @@ export const paginationSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   page_size: Joi.number().integer().min(1).max(100).default(20),
   search: Joi.string().optional(),
+  status: Joi.string().optional(),
+  volunteer_id: Joi.string().uuid().optional(),
+  service_record_id: Joi.string().uuid().optional(),
 });
 
 export const trendSchema = Joi.object({
   start_date: Joi.date().required(),
   end_date: Joi.date().required(),
+});
+
+const correctedFieldsSchema = {
+  corrected_duration_hours: Joi.number().positive().optional(),
+  corrected_service_type: Joi.string().valid(
+    'elderly_care', 'child_care', 'medical_assist', 'education',
+    'community_service', 'disaster_relief', 'environmental',
+    'cultural_activity', 'other'
+  ).optional(),
+  corrected_rating: Joi.number().integer().min(1).max(5).optional(),
+};
+
+export const createCorrectionSchema = Joi.object({
+  service_record_id: Joi.string().uuid().required(),
+  reason: Joi.string().min(5).max(1000).required(),
+  ...correctedFieldsSchema,
+}).or('corrected_duration_hours', 'corrected_service_type', 'corrected_rating')
+  .messages({ 'object.missing': '请至少填写一项更正值（时长、类型或评分）' });
+
+export const reviewCorrectionSchema = Joi.object({
+  review_note: Joi.string().min(2).max(1000).required(),
 });

@@ -135,6 +135,37 @@ const createTables = async (): Promise<void> => {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS record_corrections (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        service_record_id UUID NOT NULL REFERENCES service_records(id) ON DELETE CASCADE,
+        volunteer_id UUID NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
+        corrected_duration_hours DECIMAL(6,2),
+        corrected_service_type VARCHAR(50),
+        corrected_rating INTEGER CHECK (corrected_rating IS NULL OR (corrected_rating >= 1 AND corrected_rating <= 5)),
+        reason TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+        review_note TEXT,
+        reviewed_by VARCHAR(100),
+        reviewed_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT record_corrections_at_least_one_field CHECK (
+          corrected_duration_hours IS NOT NULL
+          OR corrected_service_type IS NOT NULL
+          OR corrected_rating IS NOT NULL
+        )
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_record_corrections_record_id ON record_corrections(service_record_id);
+      CREATE INDEX IF NOT EXISTS idx_record_corrections_volunteer_id ON record_corrections(volunteer_id);
+      CREATE INDEX IF NOT EXISTS idx_record_corrections_status ON record_corrections(status);
+
+      CREATE UNIQUE INDEX IF NOT EXISTS uniq_record_corrections_one_pending
+        ON record_corrections(service_record_id)
+        WHERE status = 'pending';
+    `);
+
+    await client.query(`
       CREATE OR REPLACE FUNCTION update_updated_at_column()
       RETURNS TRIGGER AS $$
       BEGIN
@@ -151,6 +182,11 @@ const createTables = async (): Promise<void> => {
       DROP TRIGGER IF EXISTS update_service_records_updated_at ON service_records;
       CREATE TRIGGER update_service_records_updated_at
         BEFORE UPDATE ON service_records
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+      DROP TRIGGER IF EXISTS update_record_corrections_updated_at ON record_corrections;
+      CREATE TRIGGER update_record_corrections_updated_at
+        BEFORE UPDATE ON record_corrections
         FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     `);
 

@@ -26,6 +26,17 @@ docker compose down -v --remove-orphans
 - 志愿者档案与服务记录
 - 积分、徽章和信用分计算
 - 投诉处理、后台调整和排行榜
+- 服务记录纠错闭环（志愿者申请、管理员批准/驳回）
+
+### 服务记录纠错
+
+- 志愿者可对**本人**的服务记录提交一次纠错申请，注明原时长、类型或评分的更正值与理由。
+- 同一记录同时只允许一条待处理申请（数据库部分唯一索引保证），申请被批准或驳回后不可再次提交。
+- 管理员**批准**后，在单事务内按更正值重算该记录积分、志愿者总积分、等级、徽章和信用分，并写入积分/信用明细；任一步失败整体回滚，不会留下半更新。
+- 管理员**驳回**仅更新申请状态，原记录与所有统计保持不变。
+- 批准、驳回均为条件更新（`WHERE status = 'pending'`），并发处理只有一方生效。
+
+接口：`POST /api/v1/corrections`、`GET /api/v1/corrections`、`GET /api/v1/corrections/:id`、`POST /api/v1/admin/corrections/:id/approve`、`POST /api/v1/admin/corrections/:id/reject`。
 
 ## 本地开发
 

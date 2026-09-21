@@ -41,4 +41,9 @@ export const apiEndpoints = [
   'POST /api/v1/complaints/:id/handle - 处理投诉',
   'POST /api/v1/admin/adjust-points - 调整积分',
   'POST /api/v1/admin/adjust-credit - 调整信用分',
+  'POST /api/v1/corrections - 提交服务记录纠错申请',
+  'GET /api/v1/corrections - 纠错申请列表',
+  'GET /api/v1/corrections/:id - 纠错申请详情',
+  'POST /api/v1/admin/corrections/:id/approve - 批准纠错并重算',
+  'POST /api/v1/admin/corrections/:id/reject - 驳回纠错',
 ];

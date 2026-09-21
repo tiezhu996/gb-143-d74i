@@ -195,6 +195,31 @@ export interface RankingEntry {
   level?: number;
 }
 
+export type CorrectionStatus = 'pending' | 'approved' | 'rejected';
+
+export interface RecordCorrection {
+  id: string;
+  service_record_id: string;
+  volunteer_id: string;
+  corrected_duration_hours?: number;
+  corrected_service_type?: string;
+  corrected_rating?: number;
+  reason: string;
+  status: CorrectionStatus;
+  review_note?: string;
+  reviewed_by?: string;
+  reviewed_at?: Date;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface RecordCorrectionInput {
+  corrected_duration_hours?: number;
+  corrected_service_type?: string;
+  corrected_rating?: number;
+  reason: string;
+}
+
 export interface TrendData {
   date: string;
   total_points: number;

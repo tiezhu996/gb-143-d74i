@@ -1,11 +1,12 @@
 import { Router, Response } from 'express';
-import { validateRequest, validateQuery, adjustPointsSchema, adjustCreditSchema, paginationSchema } from '../middleware/validator';
+import { validateRequest, validateQuery, adjustPointsSchema, adjustCreditSchema, paginationSchema, reviewCorrectionSchema } from '../middleware/validator';
 import {
   adjustPoints,
   adjustCreditScore,
   getAdminAuditLogs,
   setVolunteerStatus,
 } from '../services/adminService';
+import { approveCorrection, rejectCorrection, getCorrectionById } from '../services/correctionService';
 import { AuthRequest, requireAdmin } from '../middleware/auth';
 import { messages } from '../constants/messages';
 import { sendBadRequest, sendInternalError } from '../utils/httpResponses';
@@ -73,6 +74,38 @@ router.patch('/volunteers/:id/status', async (req: AuthRequest, res: Response) =
     res.status(statusCode).json(result);
   } catch (error) {
     sendInternalError(res, error, 'Error setting volunteer status');
+  }
+});
+
+router.get('/corrections/:id', async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await getCorrectionById(req.params.id);
+    const statusCode = result.success ? 200 : 404;
+    res.status(statusCode).json(result);
+  } catch (error) {
+    sendInternalError(res, error, 'Error getting correction');
+  }
+});
+
+router.post('/corrections/:id/approve', validateRequest(reviewCorrectionSchema), async (req: AuthRequest, res: Response) => {
+  try {
+    const adminId = req.user?.id || 'admin';
+    const result = await approveCorrection(req.params.id, adminId, req.body.review_note);
+    const statusCode = result.success ? 200 : 400;
+    res.status(statusCode).json(result);
+  } catch (error) {
+    sendInternalError(res, error, 'Error approving correction');
+  }
+});
+
+router.post('/corrections/:id/reject', validateRequest(reviewCorrectionSchema), async (req: AuthRequest, res: Response) => {
+  try {
+    const adminId = req.user?.id || 'admin';
+    const result = await rejectCorrection(req.params.id, adminId, req.body.review_note);
+    const statusCode = result.success ? 200 : 400;
+    res.status(statusCode).json(result);
+  } catch (error) {
+    sendInternalError(res, error, 'Error rejecting correction');
   }
 });
 
