@@ -1,7 +1,9 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { env } from '../config/env';
 import { messages } from '../constants/messages';
 import { logger } from '../utils/logger';
+
+export type PoolClientLike = PoolClient;
 
 const pool = new Pool({
   host: env.database.host,

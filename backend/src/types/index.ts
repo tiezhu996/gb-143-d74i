@@ -95,6 +95,25 @@ export interface Complaint {
   resolved_at?: Date;
 }
 
+export interface CorrectionRequest {
+  id?: string;
+  record_id: string;
+  volunteer_id: string;
+  original_duration_hours: number;
+  original_service_type: string;
+  original_rating: number;
+  corrected_duration_hours?: number | null;
+  corrected_service_type?: string | null;
+  corrected_rating?: number | null;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  handled_by?: string;
+  resolution?: string;
+  handled_at?: Date;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 export interface CreditLog {
   id: string;
   volunteer_id: string;

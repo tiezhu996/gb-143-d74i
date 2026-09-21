@@ -119,6 +119,33 @@ const createTables = async (): Promise<void> => {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS correction_requests (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        record_id UUID NOT NULL REFERENCES service_records(id) ON DELETE CASCADE,
+        volunteer_id UUID NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
+        original_duration_hours DECIMAL(6,2) NOT NULL,
+        original_service_type VARCHAR(50) NOT NULL,
+        original_rating INTEGER NOT NULL,
+        corrected_duration_hours DECIMAL(6,2),
+        corrected_service_type VARCHAR(50),
+        corrected_rating INTEGER CHECK (corrected_rating >= 1 AND corrected_rating <= 5),
+        reason TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+        handled_by VARCHAR(100),
+        resolution TEXT,
+        handled_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(record_id, volunteer_id)
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_correction_requests_pending_record
+        ON correction_requests(record_id) WHERE status = 'pending';
+      CREATE INDEX IF NOT EXISTS idx_correction_requests_volunteer_id ON correction_requests(volunteer_id);
+      CREATE INDEX IF NOT EXISTS idx_correction_requests_status ON correction_requests(status);
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS admin_audit_logs (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         admin_id VARCHAR(100) NOT NULL,

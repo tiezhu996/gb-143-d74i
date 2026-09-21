@@ -96,6 +96,39 @@ export const adjustCreditSchema = Joi.object({
   reason: Joi.string().min(5).required(),
 });
 
+export const createCorrectionSchema = Joi.object({
+  corrected_duration_hours: Joi.number().positive().optional(),
+  corrected_service_type: Joi.string().valid(
+    'elderly_care', 'child_care', 'medical_assist', 'education',
+    'community_service', 'disaster_relief', 'environmental',
+    'cultural_activity', 'other'
+  ).optional(),
+  corrected_rating: Joi.number().integer().min(1).max(5).optional(),
+  reason: Joi.string().min(5).max(500).required(),
+}).custom((value, helpers) => {
+  if (
+    value.corrected_duration_hours === undefined &&
+    value.corrected_service_type === undefined &&
+    value.corrected_rating === undefined
+  ) {
+    return helpers.error('any.invalid', { message: '至少需要更正时长、类型或评分中的一项' });
+  }
+  return value;
+}, 'correction fields');
+
+export const handleCorrectionSchema = Joi.object({
+  action: Joi.string().valid('approve', 'reject').required(),
+  resolution: Joi.string().min(5).max(500).optional(),
+});
+
+export const correctionListQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  page_size: Joi.number().integer().min(1).max(100).default(20),
+  status: Joi.string().valid('pending', 'approved', 'rejected').optional(),
+  volunteer_id: Joi.string().uuid().optional(),
+  record_id: Joi.string().uuid().optional(),
+});
+
 export const paginationSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   page_size: Joi.number().integer().min(1).max(100).default(20),
